@@ -36,21 +36,12 @@ module.exports = async (sentence = "") => {
     } else if(index === blackedOutIndex) {
       var termText = term.text;
       
-      let nonWordCharRegexEnd = /.+\W$/;
-      if(nonWordCharRegexEnd.test(termText)) {
-        sentenceDict.after += termText[termText.length - 1];
-        if((sentenceTerms.length - 1) !== index) sentenceDict.after += " ";
-        termText = termText.slice(0, -1);
-      };
+      let nonWordCharsRegex = /^(\W*)([^\W]+)(\W*)$/u;
+      let matchResult = nonWordCharsRegex.exec(termText);
       
-      let nonWordCharRegexStart = /^\W.+/;
-      if(nonWordCharRegexStart.test(termText)) {
-        if(0 !== index) sentenceDict.before += " ";
-        sentenceDict.before += termText[0];
-        termText = termText.slice(1, termText.length);
-      };
-      
-      sentenceDict.blackedOutWord = termText;
+      sentenceDict.before += matchResult[1];
+      sentenceDict.blackedOutWord = matchResult[2];
+      sentenceDict.after += matchResult[3];
     }
   });
   
@@ -60,6 +51,7 @@ module.exports = async (sentence = "") => {
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
 //const tokenizer = require('sbd');
 const nlp = require('compromise');
 const _ = require('underscore');
