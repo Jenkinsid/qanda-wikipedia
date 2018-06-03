@@ -4,12 +4,29 @@ class Qanda {
   constructor() {
     this.domRoot = undefined;
     this.domElements = {};
-    this.languageSwitcher = new LanguageSwitcher(this.nextQuestion.bind(this));
+    
+    let language = window.location.pathname.slice(1, 3);
+    if(!Object.values(LanguageSwitcher.LANGUAGES).includes(language)) language = undefined;
+    
+    this.languageSwitcher = new LanguageSwitcher(this.localeWasChanged.bind(this), language);
     this.sentenceProvider = new SentenceProvider(this);
     this.createDom();
     this.insertDom();
     
+    this.translate();
+    
     this.points = 0;
+  }
+  
+  localeWasChanged() {
+    this.nextQuestion();
+    this.translate();
+  }
+  
+  translate() {
+    document.querySelectorAll("[data-translation]").forEach((element) => {
+      element.innerText = Qanda.LOCALE[this.currentLanguageIdentifier()][element.dataset.translation];
+    });
   }
   
   currentLanguageIdentifier() {
@@ -26,7 +43,7 @@ class Qanda {
     this.domElements.blackedOutWordInput.classList.add('blacked-out-input');
     this.domElements.sentenceAfter = document.createElement('span');
     this.domElements.submitButton = document.createElement('button');
-    this.domElements.submitButton.innerText = 'Check';
+    this.domElements.submitButton.dataset.translation = 'check';
     
     this.bindEvents();
     
@@ -53,10 +70,10 @@ class Qanda {
   checkAnswer() {
     if(this.domElements.blackedOutWordInput.value === this.blackedOutWord) {
       this.points++;
-      alert(`Correct answer, ${this.points} points`);
+      alert(Qanda.LOCALE[this.currentLanguageIdentifier()]['correctAnswer'](this.points));
     } else {
       this.points = 0;
-      alert(`Wrong answer, correct answer would've been ${this.blackedOutWord}`);
+      alert(Qanda.LOCALE[this.currentLanguageIdentifier()]['wrongAnswer'](this.blackedOutWord));
     }
   }
   
@@ -92,13 +109,18 @@ class Qanda {
 Qanda.LOCALE = {
   en: {
     explanation: "Guess the word that is missing from the sentence.",
-    check: "Check"
+    check: "Check",
+    correctAnswer: (points) => { return `Correct answer, ${points} points` },
+    wrongAnswer: (blackedOutWord) => { return `Wrong answer, correct answer would've been ${blackedOutWord}` }
   },
   de: {
     explanation: "Errate das das fehlende Wort im Satz.",
-    check: "Überprüfen"
+    check: "Überprüfen",
+    correctAnswer: (points) => { return `Richtige Antwort, ${points} Punkte` },
+    wrongAnswer: (blackedOutWord) => { return `Falsche Antwort, die richtige Antwort wäre ${blackedOutWord} gewesen` }
   }
 }
+Qanda.LOCALE.lt = Qanda.LOCALE.en;
 
 let qanda = new Qanda();
 qanda.nextQuestion();

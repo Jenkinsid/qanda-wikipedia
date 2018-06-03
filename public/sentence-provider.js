@@ -10,7 +10,7 @@ class SentenceProvider {
   
   async get() {
     var randSentence = await this.randSentence();
-    while(randSentence.status === 500 || randSentence.status === 404) {
+    while(randSentence.status === 500 || randSentence.status === 404 || randSentence.status === 414) {
       randSentence = await this.randSentence();
     }
     
@@ -30,7 +30,7 @@ class SentenceProvider {
     
     let randSentenceParams = {text: this.randWikipedia['text']};
 
-    let randSentence = await axios.get(randSentenceEndP, {params: randSentenceParams});
+    let randSentence = await axios.post(randSentenceEndP, randSentenceParams);
     
     return randSentence;
   }
