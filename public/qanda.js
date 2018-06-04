@@ -111,13 +111,15 @@ Qanda.LOCALE = {
     explanation: "Guess the word that is missing from the sentence.",
     check: "Check",
     correctAnswer: (points) => { return `Correct answer, ${points} points` },
-    wrongAnswer: (blackedOutWord) => { return `Wrong answer, correct answer would've been ${blackedOutWord}` }
+    wrongAnswer: (blackedOutWord) => { return `Wrong answer, correct answer would've been ${blackedOutWord}` },
+    skipHint: 'Press Enter or press "Check" to skip'
   },
   de: {
     explanation: "Errate das das fehlende Wort im Satz.",
     check: "Überprüfen",
     correctAnswer: (points) => { return `Richtige Antwort, ${points} Punkte` },
-    wrongAnswer: (blackedOutWord) => { return `Falsche Antwort, die richtige Antwort wäre ${blackedOutWord} gewesen` }
+    wrongAnswer: (blackedOutWord) => { return `Falsche Antwort, die richtige Antwort wäre ${blackedOutWord} gewesen` },
+    skipHint: 'Drücke Enter oder klicke/tappe auf "Überprüfen" um zu überspringen'
   }
 }
 Qanda.LOCALE.lt = Qanda.LOCALE.en;
