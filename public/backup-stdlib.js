@@ -1,3 +1,27 @@
+const lib = require('lib');
+
+/**
+* Qanda question endpoint.
+* @returns {object}
+*/
+module.exports = async (language = "en", context) => {
+  let response = await randomSentenceErrorProne(language, context);
+  let blackedOutDict = await lib[`${context.service.identifier}.black-out-random-word`]({sentence: response.rs.result});
+  
+  return {articleTitle: response.p.title, wikipediaId: response.p.wikipediaId, sentence: blackedOutDict};
+}
+
+async function randomSentenceErrorProne(language, context) {
+  let page = await lib[`${context.service.identifier}.random-wikipedia-page`]({language: language});
+  let randomSentence = await lib[`${context.service.identifier}.random-sentence`]({text: page.text});
+  
+  if(randomSentence.error === true) {
+    return randomSentence(language, context);
+  } else {
+    return {p: page, rs: randomSentence};
+  }
+}
+
 const _ = require('underscore');
 const nlp = require('compromise');
 
@@ -36,21 +60,14 @@ module.exports = async (sentence = "") => {
     } else if(index === blackedOutIndex) {
       var termText = term.text;
       
-      let nonWordCharRegexEnd = /.+\W$/;
-      if(nonWordCharRegexEnd.test(termText)) {
-        sentenceDict.after += termText[termText.length - 1];
-        if((sentenceTerms.length - 1) !== index) sentenceDict.after += " ";
-        termText = termText.slice(0, -1);
-      };
+      let specialCharsCharacterClass = '[,\\.\\?!()\\-\\–\/"\\s]';
+      let nonWordCharsRegex = new RegExp(`^(${specialCharsCharacterClass}*)(.+?)(${specialCharsCharacterClass}*)$`);
+      console.log(nonWordCharsRegex);
+      let matchResult = nonWordCharsRegex.exec(termText);
       
-      let nonWordCharRegexStart = /^\W.+/;
-      if(nonWordCharRegexStart.test(termText)) {
-        if(0 !== index) sentenceDict.before += " ";
-        sentenceDict.before += termText[0];
-        termText = termText.slice(1, termText.length);
-      };
-      
-      sentenceDict.blackedOutWord = termText;
+      sentenceDict.before += matchResult[1];
+      sentenceDict.blackedOutWord = matchResult[2];
+      sentenceDict.after += matchResult[3];
     }
   });
   
@@ -60,11 +77,7 @@ module.exports = async (sentence = "") => {
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-//const tokenizer = require('sbd');
-const nlp = require('compromise');
-const _ = require('underscore');
-var sanitizeHtml = require('sanitize-html');
-var decodeHtml = require('decode-html');
+
 
 /**
 * Get a random sentence from provided text. 
