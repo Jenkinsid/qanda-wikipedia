@@ -25,9 +25,21 @@
   content: 'Loading...';
 }
 
-.blacked-out-input {
-  display: inline;
+.blacked-out-input-container .choices {
+  background-color: white;
+  padding: 5px;
+  margin: 5px;
 }
+
+.blacked-out-input-container .choices .choice {
+  border: 2px solid blue;
+  padding: 2px;
+  margin: 1px;
+  cursor: pointer;
+}
+
+
+
 
 body {
   font-family: "Benton Sans", "Helvetica Neue", helvetica, arial, sans-serif;
