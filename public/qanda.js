@@ -1,4 +1,4 @@
-/* global SentenceProvider, LanguageSwitcher */
+/* global SentenceProvider, LanguageSwitcher, MultipleChoice */
 
 class Qanda {
   constructor() {
@@ -39,26 +39,15 @@ class Qanda {
     this.domElements.title = document.createElement('h4');
     this.domElements.paragraph = document.createElement('p');
     this.domElements.sentenceBefore = document.createElement('span');
-    this.domElements.blackedOutWordInput = document.createElement('input');
-    this.domElements.blackedOutWordInput.classList.add('blacked-out-input');
+    this.domElements.blackedOutWordInputContainer = document.createElement('div');
+    this.domElements.blackedOutWordInputContainer.classList.add('blacked-out-input-container');
     this.domElements.sentenceAfter = document.createElement('span');
-    this.domElements.submitButton = document.createElement('button');
-    this.domElements.submitButton.dataset.translation = 'check';
-    
-    this.bindEvents();
-    
+        
     this.domRoot.appendChild(this.domElements.title);
     this.domElements.paragraph.appendChild(this.domElements.sentenceBefore);
-    this.domElements.paragraph.appendChild(this.domElements.blackedOutWordInput);
+    this.domElements.paragraph.appendChild(this.domElements.blackedOutWordInputContainer);
     this.domElements.paragraph.appendChild(this.domElements.sentenceAfter);
     this.domRoot.appendChild(this.domElements.paragraph);
-    this.domRoot.appendChild(this.domElements.submitButton);
-  }
-  
-  bindEvents() {
-    let submitHandler = this.submitHandler.bind(this);
-    this.domElements.submitButton.addEventListener('click', submitHandler);
-    this.domElements.blackedOutWordInput.addEventListener('keydown', submitHandler);
   }
   
   submitHandler(e) {
@@ -67,8 +56,8 @@ class Qanda {
     this.nextQuestion();
   }
   
-  checkAnswer() {
-    if(this.domElements.blackedOutWordInput.value === this.blackedOutWord) {
+  checkAnswer(correctAnswer) {
+    if(correctAnswer) {
       this.points++;
       alert(Qanda.LOCALE[this.currentLanguageIdentifier()]['correctAnswer'](this.points));
     } else {
@@ -79,10 +68,9 @@ class Qanda {
   
   nextQuestion() {
     this.domRoot.classList.add('loading')
-    this.domElements.blackedOutWordInput.value = "";
     this.loadQuestion(()=> {
       this.domRoot.classList.remove('loading');
-      this.domElements.blackedOutWordInput.focus();
+      this.currentMultipleChoice.focus();
     });
   }
   
@@ -92,12 +80,24 @@ class Qanda {
   
   loadQuestion(callback) {
     this.sentenceProvider.get().then((sentence)=> {
+      this.currentMultipleChoice = new MultipleChoice(sentence.choices, this.answerProvided.bind(this));
+      this.replaceBlackedOutInput(this.currentMultipleChoice.getDom());
       this.domElements.title.innerText = sentence.articleTitle;
       this.domElements.sentenceBefore.innerText = sentence.sentence.before + " ";
       this.domElements.sentenceAfter.innerText = " " + sentence.sentence.after;
       this.blackedOutWord = sentence.sentence.blackedOutWord;
       callback();
     });
+  }
+  
+  answerProvided(isCorrectAnswer) {
+    this.checkAnswer(isCorrectAnswer);
+    this.nextQuestion();
+  }
+  
+  replaceBlackedOutInput(inputDom) {
+    this.domElements.blackedOutWordInputContainer.innerHTML = '';
+    this.domElements.blackedOutWordInputContainer.appendChild(inputDom);
   }
   
   insertDom() {
@@ -109,14 +109,12 @@ class Qanda {
 Qanda.LOCALE = {
   en: {
     explanation: "Guess the word that is missing from the sentence.",
-    check: "Check",
     correctAnswer: (points) => { return `Correct answer, ${points} points` },
     wrongAnswer: (blackedOutWord) => { return `Wrong answer, correct answer would've been ${blackedOutWord}` },
     skipHint: 'Press Enter or press "Check" to skip'
   },
   de: {
     explanation: "Errate das das fehlende Wort im Satz.",
-    check: "Überprüfen",
     correctAnswer: (points) => { return `Richtige Antwort, ${points} Punkte` },
     wrongAnswer: (blackedOutWord) => { return `Falsche Antwort, die richtige Antwort wäre ${blackedOutWord} gewesen` },
     skipHint: 'Drücke Enter oder klicke/tappe auf "Überprüfen" um zu überspringen'
